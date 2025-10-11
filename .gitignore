@@ -1,4 +1,5 @@
 node_modules/
-/session/
+.wwebjs_cache/
+session/
 .env
 .DS_Store

@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  whatsapp-bot:
+    build: .
+    container_name: whatsapp-bot
+    restart: unless-stopped
+    environment:
+      - PORT=3001
+      - SESSION_PATH=/usr/src/app/session
+      - CHROME_PATH=/usr/bin/chromium
+    volumes:
+      - ./session:/usr/src/app/session
+      - ./session:/home/app/.config/WhisperSession # compatibility mount (some libs expect home)
+    ports:
+      - "3001:3001"
+    shm_size: '1gb'
+    security_opt:
+      - seccomp:unconfined

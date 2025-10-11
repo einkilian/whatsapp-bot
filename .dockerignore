@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+.git
+.session
+session/**/Cache
+session/**/Cache_Data
+session/**/GPUCache
+session/**/Code Cache
+.wwebjs_cache

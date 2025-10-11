@@ -6,14 +6,23 @@ import qrcode from "qrcode-terminal";
 const app = express();
 app.use(express.json());
 
+// Env / config (helpful for Docker)
+const SESSION_PATH = process.env.SESSION_PATH || "./session";
+const PORT = process.env.PORT || 3001;
+const CHROME_PATH = process.env.CHROME_PATH || undefined;
+
 // WhatsApp-Client
-const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: "./session" }),
+const clientConfig = {
+  authStrategy: new LocalAuth({ dataPath: SESSION_PATH }),
   puppeteer: {
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
   },
-});
+};
+
+if (CHROME_PATH) clientConfig.puppeteer.executablePath = CHROME_PATH;
+
+const client = new Client(clientConfig);
 
 // QR-Code beim ersten Start
 client.on("qr", qr => qrcode.generate(qr, { small: true }));
@@ -70,5 +79,4 @@ app.get("/chats", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`🌐 API läuft auf Port ${PORT}`));
