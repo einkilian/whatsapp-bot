@@ -62,7 +62,7 @@ client.on("message_reaction", async (reaction) => {
     // Nur Daumen-hoch berücksichtigen
     if (emoji === "👍") {
         try {
-            await fetch("http://192.168.250.1:5678/webhook-test/doneTaskOnWA", {
+            await fetch("http://192.168.250.1:5678/webhook/doneTaskOnWA", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ messageId: messageId }),
@@ -83,7 +83,7 @@ app.post("/send", async (req, res) => {
 
     try {
         const sentMessage = await client.sendMessage(chatId, message);
-        await fetch("http://192.168.250.1:5678/webhook-test/addMessageWithTask", {
+        await fetch("http://192.168.250.1:5678/webhook/addMessageWithTask", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ messageId: sentMessage.id._serialized, taskId: taskId }),
