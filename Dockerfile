@@ -51,10 +51,10 @@ COPY . .
 # Expose port
 EXPOSE 3001
 
-# Use non-root user for security
-RUN groupadd -r app && useradd -r -g app app
-RUN chown -R app:app /usr/src/app
-USER app
+# Ensure session dir exists and is writable (LocalAuth will create subdirs)
+RUN mkdir -p /usr/src/app/session \
+  && chown -R root:root /usr/src/app/session \
+  && chmod -R 0777 /usr/src/app/session
 
 # Default CHROME_PATH points to system chromium
 ENV CHROME_PATH=/usr/bin/chromium

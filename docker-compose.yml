@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   whatsapp-bot:
     build: .
@@ -11,9 +9,12 @@ services:
       - CHROME_PATH=/usr/bin/chromium
     volumes:
       - ./session:/usr/src/app/session
-      - ./session:/home/app/.config/WhisperSession # compatibility mount (some libs expect home)
+      - session_data:/usr/src/app/session
     ports:
       - "3001:3001"
     shm_size: '1gb'
     security_opt:
       - seccomp:unconfined
+
+volumes:
+  session_data:
