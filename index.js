@@ -77,23 +77,34 @@ client.initialize();
 
 // Endpoint zum Senden einer Nachricht
 app.post("/send", async (req, res) => {
+    const sendType = req.query.type;
     const { chatId, message, taskId } = req.body;
-    if (!chatId || !message)
+    if (!chatId || !message || !sendType) {
         return res.status(400).json({ error: "chatId und message erforderlich" });
-
-    try {
-        const sentMessage = await client.sendMessage(chatId, message);
-        await fetch("http://192.168.250.1:5678/webhook/addMessageWithTask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ messageId: sentMessage.id._serialized, taskId: taskId }),
-        });
-        res.status(200).json({ success: true });
-        return;
-    } catch (err) {
-        console.error("Send error:", err);
-        res.status(500).json({ error: err.message });
     }
+    if (sendType === "task") {
+        try {
+            const sentMessage = await client.sendMessage(chatId, message);
+            await fetch("http://192.168.250.1:5678/webhook/addMessageWithTask", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ messageId: sentMessage.id._serialized, taskId: taskId }),
+            });
+            return res.status(200).json({ success: true });
+        } catch (err) {
+            console.error("Send error:", err);
+            return res.status(500).json({ error: err.message });
+        }
+    } else {
+        try {
+            client.sendMessage(chatId, message);
+            return res.status(200).json({ success: true });
+        } catch (error) {
+            console.log(err)
+            return res.status(500).json({ error: err.message });
+        }
+    }
+
 });
 
 // Optional: Alle Chats abrufen (zum Ermitteln der Chat-IDs)
