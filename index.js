@@ -41,6 +41,7 @@ client.on("message", async msg => {
         const body = msg.body && msg.body.toLowerCase();
 
         console.log(`📩 Nachricht von ${from}: ${msg.body} (ID: ${msg.id._serialized})`);
+        await client.sendSeen(from);
 
         // Beispiel: wenn Nachricht mit "/echo " beginnt, dann echo
         if (body && body.startsWith("/echo ")) {
@@ -143,7 +144,13 @@ app.post("/react", async (req, res) => {
         if (!targetMsg) {
             return res.status(404).json({ error: "Nachricht nicht gefunden" });
         }
-        await targetMsg.react(emoji);
+        if (emoji === "like") {
+            await targetMsg.react("👍");
+        } else if (emoji === "dislike") {
+            await targetMsg.react("👎");
+        } else {
+            return res.status(400).json({ error: "Unbekanntes Emoji" });
+        }
         return res.status(200).json({ success: true });
     } catch (err) {
         console.error("React error:", err);
