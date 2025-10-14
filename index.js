@@ -40,12 +40,37 @@ client.on("message", async msg => {
         const from = msg.from; // chat id
         const body = msg.body && msg.body.toLowerCase();
 
+        console.log(`📩 Nachricht von ${from}: ${msg.body} (ID: ${msg.id._serialized})`);
+
         // Beispiel: wenn Nachricht mit "/echo " beginnt, dann echo
         if (body && body.startsWith("/echo ")) {
             const toEcho = msg.body.slice(6);
             await client.sendMessage(from, toEcho || "(nothing to echo)");
             return;
         }
+
+        if (body && body.startsWith("/")) {
+            // Beispiel: /"part1" "part2" "content"
+            const match = msg.body.match(/^\/"([^"]+)"\s+"([^"]+)"\s+"([^"]+)"$/);
+            if (match) {
+                const [, part1, part2, content] = match;
+                console.log(`part1: ${part1}, part2: ${part2}, content: ${content}`);
+                try {
+                    await fetch(`http://192.168.250.1:5678/webhook-test/${part1}/${part2}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ content }),
+                    });
+                    await client.sendMessage(from, `Webhook call to /${part1}/${part2} successful.`);
+                } catch (err) {
+                    console.error("Webhook error:", err.message);
+                    await client.sendMessage(from, `Webhook call failed: ${err.message}`);
+                }
+                return;
+            }
+        }
+
+
     } catch (e) {
         console.error("Fehler im message handler:", e);
     }
@@ -105,6 +130,25 @@ app.post("/send", async (req, res) => {
         }
     }
 
+});
+app.post("/react", async (req, res) => {
+    const { messageId, emoji } = req.body;
+    if (!messageId || !emoji) {
+        return res.status(400).json({ error: "messageId und emoji erforderlich" });
+    }
+    try {
+        const chat = await client.getChatById(messageId.split("_")[0]);
+        const message = await chat.fetchMessages({ limit: 50 });
+        const targetMsg = message.find(m => m.id._serialized === messageId);
+        if (!targetMsg) {
+            return res.status(404).json({ error: "Nachricht nicht gefunden" });
+        }
+        await targetMsg.react(emoji);
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        console.error("React error:", err);
+        return res.status(500).json({ error: err.message });
+    }
 });
 
 // Optional: Alle Chats abrufen (zum Ermitteln der Chat-IDs)
