@@ -80,7 +80,6 @@ client.on("message", async msg => {
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ content: content, chatId: from, messageId: msg.id._serialized }),
                             });
-                            await client.sendMessage(from, `Webhook call to /${part1}/${part2} successful.`);
                         } catch (err) {
                             console.error("Webhook error:", err.message);
                             await client.sendMessage(from, `Dieser Command existiert nicht.`);
@@ -122,7 +121,6 @@ client.on("message", async msg => {
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ content: content, chatId: from, messageId: msg.id._serialized }),
                             });
-                            await client.sendMessage(from, `Webhook call to /${part1}/${part2} successful.`);
                         } catch (err) {
                             console.error("Webhook error:", err.message);
                             await client.sendMessage(from, `Dieser Command existiert nicht.`);
