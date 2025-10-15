@@ -39,8 +39,7 @@ client.on("message", async msg => {
         const from = msg.from; // chat id
         const body = msg.body && msg.body.toLowerCase();
 
-        console.log(`📩 Nachricht von ${from}: ${msg.body} (ID: ${msg.id._serialized})`);
-        console.log("Vollständige Nachricht:", msg);
+        console.log(`📩 Nachricht von ${msg._data.notifyName}: ${msg.body} (ID: ${msg.id._serialized})`);
         
         // Nachricht als gelesen markieren
         await client.sendSeen(from);
