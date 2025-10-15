@@ -12,9 +12,10 @@ if [ ! -d "node_modules" ] || [ -z "$(ls -A node_modules 2>/dev/null || true)" ]
   echo "node_modules not found or empty — installing dependencies..."
   # Prefer npm ci when package-lock.json is present
   if [ -f package-lock.json ]; then
-    npm ci --only=production
+    # omit dev dependencies explicitly to avoid npm config warning
+    npm ci --omit=dev
   else
-    npm install --only=production
+    npm install --omit=dev
   fi
 else
   echo "node_modules present — skipping install"

@@ -59,6 +59,7 @@ client.on("message", async msg => {
 
         // All regualr commands send to n8n backend
         if (body && body.startsWith("/")) {
+            console.log("Processing command:", msg.body);
             const match = msg.body.match(/^\/(?:"([^\"]+)"\s+"([^\"]+)"\s+"([^\"]+)")$/) || msg.body.match(/^\/"([^\"]+)"\s+"([^\"]+)"\s+"([^\"]+)"$/);
             if (match) {
                 const [, part1, part2, content] = match;
@@ -66,7 +67,8 @@ client.on("message", async msg => {
 
                 try {
                     // include '=' and encode parts
-                    const response = await fetch(`http://192.168.250.1:5678/webhook-test/checkPermission?cmd=${encodeURIComponent(part1 + '-' + part2)}`, {
+                    console.log(`Checking permission for command: ${part1}-${part2}`);
+                    const response = await fetch(`http://192.168.250.1:5678/webhook-test/checkPermission?cmd=${part1}-${part2}`, {
                         method: "POST",
                     });
                     if (response.status === 200) {

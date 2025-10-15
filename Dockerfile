@@ -8,24 +8,15 @@ RUN apt-get update \
     fonts-liberation \
     libasound2 \
     libatk-bridge2.0-0 \
-    libatk1.0-0 \
     libc6 \
     libcairo2 \
     libdbus-1-3 \
-    libdrm2 \
     libgbm1 \
-    libgdk-pixbuf2.0-0 \
-    libnspr4 \
     libnss3 \
     libx11-6 \
-    libx11-xcb1 \
-    libxcb1 \
     libxcomposite1 \
-    libxcursor1 \
     libxdamage1 \
     libxext6 \
-    libxfixes3 \
-    libxi6 \
     libxrandr2 \
     libxrender1 \
     libxss1 \
@@ -38,6 +29,10 @@ RUN apt-get update && apt-get install -y chromium && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /usr/src/app
+
+# Optionally upgrade npm during build to avoid 'new major version' notices
+ARG UPGRADE_NPM=0
+RUN if [ "$UPGRADE_NPM" = "1" ]; then npm install -g npm@latest; fi
 
 # Copy package files first to leverage docker cache
 COPY package*.json ./
