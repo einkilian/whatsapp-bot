@@ -42,22 +42,24 @@ WORKDIR /usr/src/app
 # Copy package files first to leverage docker cache
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
-
 # Copy source
 COPY . .
+
+# Copy entrypoint script which will install dependencies at container start
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 3001
 
 # Ensure session dir exists and is writable (LocalAuth will create subdirs)
-RUN mkdir -p /usr/src/app/session \
-  && chown -R root:root /usr/src/app/session \
-  && chmod -R 0777 /usr/src/app/session
+RUN mkdir -p /usr/src/app/session /usr/src/app/.npm /usr/src/app/node_modules \
+  && chown -R root:root /usr/src/app/session /usr/src/app/.npm /usr/src/app/node_modules \
+  && chmod -R 0777 /usr/src/app/session /usr/src/app/.npm /usr/src/app/node_modules
 
 # Default CHROME_PATH points to system chromium
 ENV CHROME_PATH=/usr/bin/chromium
 ENV SESSION_PATH=/usr/src/app/session
 
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["node", "index.js"]

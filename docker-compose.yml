@@ -10,6 +10,8 @@ services:
     volumes:
       - ./session:/usr/src/app/session
       - session_data:/usr/src/app/session
+      - npm_cache:/usr/src/app/.npm
+      - node_modules:/usr/src/app/node_modules
     ports:
       - "3001:3001"
     shm_size: '1gb'
@@ -18,3 +20,5 @@ services:
 
 volumes:
   session_data:
+  npm_cache:
+  node_modules:
