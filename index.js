@@ -60,7 +60,7 @@ client.on("message", async msg => {
         // All regualr commands send to n8n backend
         if (body && body.startsWith("/")) {
             console.log("Processing command:", msg.body);
-            const match = msg.body.match(/^\/(?:"([^\"]+)"\s+"([^\"]+)"\s+"([^\"]+)")$/) || msg.body.match(/^\/"([^\"]+)"\s+"([^\"]+)"\s+"([^\"]+)"$/);
+            const match = msg.body.match(/^\/(\S+)\s+(\S+)\s+(.+)$/);
             if (match) {
                 const [, part1, part2, content] = match;
                 console.log(`part1: ${part1}, part2: ${part2}, content: ${content}`);
