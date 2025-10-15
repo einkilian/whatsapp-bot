@@ -40,7 +40,7 @@ client.on("message", async msg => {
         const body = msg.body && msg.body.toLowerCase();
 
         console.log(`📩 Nachricht von ${msg._data.notifyName}: ${msg.body} (ID: ${msg.id._serialized})`);
-        
+
         // Nachricht als gelesen markieren
         await client.sendSeen(from);
         // Chat-Info an Backend senden
@@ -68,15 +68,17 @@ client.on("message", async msg => {
                 try {
                     // include '=' and encode parts
                     console.log(`Checking permission for command: ${part1}-${part2}`);
-                    const response = await fetch(`http://192.168.250.1:5678/webhook-test/checkPermission?cmd=${part1}-${part2}`, {
+                    const response = await fetch(`http://192.168.250.1:5678/webhook-test/checkPermission`, {
                         method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ cmd: `${part1}_${part2}`, chatId: from }),
                     });
                     if (response.status === 200) {
                         try {
                             await fetch(`http://192.168.250.1:5678/webhook-test/${part1}/${part2}`, {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ content: content, chatId: from, messageId: msg.id._serialized}),
+                                body: JSON.stringify({ content: content, chatId: from, messageId: msg.id._serialized }),
                             });
                             await client.sendMessage(from, `Webhook call to /${part1}/${part2} successful.`);
                         } catch (err) {
