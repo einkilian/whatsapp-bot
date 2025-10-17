@@ -42,7 +42,12 @@ client.on("message", async msg => {
         console.log(`📩 Nachricht von ${msg._data.notifyName}: ${msg.body} (ID: ${msg.id._serialized})`);
 
         // Nachricht als gelesen markieren
-        await client.sendSeen(from);
+        try {
+            const chat = await msg.getChat();
+            await chat.sendSeen();
+        } catch (err) {
+            console.error("sendSeen error:", err);
+        }
         // Chat-Info an Backend senden
         await fetch(`http://192.168.250.1:5678/webhook/wab/updatechat`, {
             method: "POST",
