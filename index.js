@@ -44,7 +44,7 @@ client.on("message", async msg => {
         // Nachricht als gelesen markieren
         await client.sendSeen(from);
         // Chat-Info an Backend senden
-        await fetch(`http://192.168.250.1:5678/webhook-test/updatechat`, {
+        await fetch(`http://192.168.250.1:5678/webhook/wab/updatechat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: msg.id._serialized, name: msg._data.notifyName }),
@@ -68,14 +68,14 @@ client.on("message", async msg => {
                 try {
                     // include '=' and encode parts
                     console.log(`Checking permission for command: ${part1}-${part2}`);
-                    const response = await fetch(`http://192.168.250.1:5678/webhook/checkPermission`, {
+                    const response = await fetch(`http://192.168.250.1:5678/webhook/wab/checkPermission`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ cmd: `${part1}_${part2}`, chatId: from }),
                     });
                     if (response.status === 200) {
                         try {
-                            await fetch(`http://192.168.250.1:5678/webhook/${part1}/${part2}`, {
+                            await fetch(`http://192.168.250.1:5678/webhook/wab/${part1}/${part2}`, {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ content: content, chatId: from, messageId: msg.id._serialized }),
@@ -109,14 +109,14 @@ client.on("message", async msg => {
                 try {
                     // include '=' and encode parts
                     console.log(`Checking permission for command: ${part1}-${part2}`);
-                    const response = await fetch(`http://192.168.250.1:5678/webhook-test/checkPermission`, {
+                    const response = await fetch(`http://192.168.250.1:5678/webhook-test/wab/checkPermission`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ cmd: `${part1}_${part2}`, chatId: from }),
                     });
                     if (response.status === 200) {
                         try {
-                            await fetch(`http://192.168.250.1:5678/webhook-test/${part1}/${part2}`, {
+                            await fetch(`http://192.168.250.1:5678/webhook-test/wab/${part1}/${part2}`, {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ content: content, chatId: from, messageId: msg.id._serialized }),
