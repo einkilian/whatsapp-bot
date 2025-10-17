@@ -119,7 +119,7 @@ client.on("message", async msg => {
                 try {
                     // include '=' and encode parts
                     console.log(`Checking permission for command: ${part1}-${part2}`);
-                    const response = await fetch(`http://192.168.250.1:5678/test/wab/checkPermission`, {
+                    const response = await fetch(`http://192.168.250.1:5678/webhook/wab/checkPermission`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ cmd: `${part1}_${part2}`, chatId: from }),
