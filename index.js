@@ -28,14 +28,40 @@ if (CHROME_PATH) clientConfig.puppeteer.executablePath = CHROME_PATH;
 const client = new Client(clientConfig);
 
 // QR-Code beim ersten Start
+let clientIsReady = false;
 client.on("qr", qr => qrcode.generate(qr, { small: true }));
-client.on("ready", () => console.log("✅ WhatsApp-Bot ist bereit!"));
+client.on("ready", () => {
+    clientIsReady = true;
+    console.log("✅ WhatsApp-Bot ist bereit!");
+});
 client.on("authenticated", () => console.log("🔐 Authentifiziert"));
 client.on("disconnected", () => console.log("❌ Verbindung verloren – wird neu aufgebaut…"));
 
-// Einfacher Auto-Reply / Command-Handler
 
+async function readAllMessages() {
+    if (!clientIsReady) return;
+    try {
+        const chats = await client.getChats();
+        for (const chat of chats) {
+            if (chat.unreadCount > 0) await chat.sendSeen();
+        }
+    } catch (err) {
+        console.error("Fehler beim Lesen von Chats:", err);
+    }
+}
+
+client.on("chat_update", async (update) => {
+    await fetch(`http://192.168.250.1:5678/webhook/wab/eventchatupdate`, {
+        method: "POST",
+    });
+});
+
+// Also react to group metadata updates (timers may change here as well)
+client.on("group_update", async (notification) => {
+    await enforceEphemeral24h(notification);
+});
 client.on("message", async msg => {
+    readAllMessages();
     try {
         const from = msg.from; // chat id
         const body = msg.body && msg.body.toLowerCase();
@@ -58,10 +84,15 @@ client.on("message", async msg => {
 
         // All regualr commands send to n8n backend
         if (body && body.startsWith("/")) {
-            console.log("Processing command:", msg.body);
-            const match = msg.body.match(/^\/(\S+)\s+(\S+)\s+(.+)$/);
+            const match = msg.body.match(/^\/([^\/\s]+)(?:\/([^\/\s]+))?(?:\s+(.*))?$/);
             if (match) {
-                const [, part1, part2, content] = match;
+                let [, part1, part2, content] = match;
+                // if there's no slash-part2 but there's remaining text, treat the first token as part2
+                if (!part2 && content) {
+                    const parts = content.trim().split(/\s+/);
+                    part2 = parts.shift();
+                    content = parts.join(' ') || undefined;
+                }
                 console.log(`part1: ${part1}, part2: ${part2}, content: ${content}`);
 
                 try {
@@ -99,10 +130,17 @@ client.on("message", async msg => {
             }
         }
         if (body && body.startsWith("t/")) {
-            console.log("Processing command:", msg.body);
-            const match = msg.body.match(/^t\/(\S+)\s+(\S+)\s+(.+)$/);
+            console.log("Processing test command:", msg.body);
+            // allow optional "/part2" or a space-separated part2; content may be optional
+            const match = msg.body.match(/^t\/([^\/\s]+)(?:\/([^\/\s]+))?(?:\s+(.*))?$/);
             if (match) {
-                const [, part1, part2, content] = match;
+                let [, part1, part2, content] = match;
+                // if there's no slash-part2 but there's remaining text, treat the first token as part2
+                if (!part2 && content) {
+                    const parts = content.trim().split(/\s+/);
+                    part2 = parts.shift();
+                    content = parts.join(' ') || undefined;
+                }
                 console.log(`part1: ${part1}, part2: ${part2}, content: ${content}`);
 
                 try {
@@ -135,29 +173,17 @@ client.on("message", async msg => {
                     console.error("Webhook error:", err.message);
                 }
 
-
                 return;
             }
         }
 
-        /*if (body && body.startsWith("/verify ")) {
-            try {
-                const response = await fetch("http://192.168.250.1:5678/webhook/wab/grand", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ from, message: msg.body }),
-                });
-                if (response.ok) {
-                    await client.sendMessage(from, "Webhook /grand erfolgreich aufgerufen.");
-                } else {
-                    await client.sendMessage(from, "Fehler beim Aufruf des /grand Webhooks.");
-                }
-            } catch (err) {
-                console.error("Webhook /grand error:", err.message);
-                await client.sendMessage(from, "Fehler beim Aufruf des /grand Webhooks.");
-            }
-            return;
-        }*/
+        try {
+            const chat = await msg.getChat();
+            await enforceEphemeral24h(chat);
+        } catch (err) {
+            console.error("Fehler beim Erzwingen von 24h Ephemeral (message):", err);
+        }
+
     } catch (e) {
         console.error("Fehler im message handler:", e);
     }
@@ -184,29 +210,12 @@ client.on("message_reaction", async (reaction) => {
         }
     }
 });
-client.on("chat_update", async (chat) => {
-    try {
-        if (chat?.ephemeralDuration && chat.ephemeralDuration !== 86400) {
-            await chat.setEphemeralDuration(86400);
-        }
-    } catch (err) {
-        console.error("Fehler bei chat_update:", err);
-    }
-});
 
 setInterval(async () => {
     try {
         await client.getState();
     } catch {
         client.initialize();
-    }
-    try {
-        const chats = await client.getChats();
-        for (const chat of chats) {
-            if (chat.unreadCount > 0) await chat.sendSeen();
-        }
-    } catch (err) {
-        console.error("Fehler beim Lesen von Chats:", err);
     }
 }, 60000);
 
@@ -221,7 +230,7 @@ app.post("/send", async (req, res) => {
     if (sendType === "task") {
         try {
             const sentMessage = await client.sendMessage(chatId, message);
-            await fetch("http://192.168.250.1:5678/webhook/addMessageWithTask", {
+            await fetch("http://192.168.250.1:5678/webhook/wab/addMessageWithTask", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ messageId: sentMessage.id._serialized, taskId: taskId }),

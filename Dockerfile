@@ -42,7 +42,9 @@ COPY . .
 
 # Copy entrypoint script which will install dependencies at container start
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Normalize line endings inside the image to avoid CRLF shebang issues (/usr/bin/env: 'bash\r')
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
+  && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 3001
