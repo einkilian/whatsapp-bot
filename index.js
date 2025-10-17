@@ -43,7 +43,7 @@ client.on("message", async msg => {
         console.log(`📩 Nachricht von ${msg._data.notifyName}: ${msg.body} (ID: ${msg.id._serialized})`);
 
         // Chat-Info an Backend senden
-        await fetch(`http://192.168.250.1:5678/webhook/wab/updatechat`, {
+        await fetch(`http://192.168.250.1:5678/webhook-test/wab/updatechat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: msg.id._serialized, name: msg._data.notifyName }),
