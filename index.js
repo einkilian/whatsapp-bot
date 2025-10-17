@@ -37,31 +37,13 @@ client.on("ready", () => {
 client.on("authenticated", () => console.log("🔐 Authentifiziert"));
 client.on("disconnected", () => console.log("❌ Verbindung verloren – wird neu aufgebaut…"));
 
-
-async function readAllMessages() {
-    if (!clientIsReady) return;
-    try {
-        const chats = await client.getChats();
-        for (const chat of chats) {
-            if (chat.unreadCount > 0) await chat.sendSeen();
-        }
-    } catch (err) {
-        console.error("Fehler beim Lesen von Chats:", err);
-    }
-}
-
 client.on("chat_update", async (update) => {
     await fetch(`http://192.168.250.1:5678/webhook/wab/eventchatupdate`, {
         method: "POST",
     });
 });
 
-// Also react to group metadata updates (timers may change here as well)
-client.on("group_update", async (notification) => {
-    await enforceEphemeral24h(notification);
-});
 client.on("message", async msg => {
-    readAllMessages();
     try {
         const from = msg.from; // chat id
         const body = msg.body && msg.body.toLowerCase();
@@ -191,7 +173,7 @@ client.on("message_reaction", async (reaction) => {
     // Nur Daumen-hoch berücksichtigen
     if (emoji === "👍") {
         try {
-            await fetch("http://192.168.250.1:5678/webhook/doneTaskOnWA", {
+            await fetch("http://192.168.250.1:5678/webhook/wab/doneTaskOnWA", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ messageId: messageId }),
@@ -209,6 +191,19 @@ setInterval(async () => {
         client.initialize();
     }
 }, 60000);
+
+setInterval(async () => {
+    if (!clientIsReady) return;
+    try {
+        const chats = await client.getChats();
+        for (const chat of chats) {
+            if (chat.unreadCount > 0) await chat.sendSeen();
+        }
+    } catch (err) {
+        console.error("Fehler beim Lesen von Chats:", err);
+    }
+}, 1000);
+
 
 client.initialize();
 // Endpoint zum Senden einer Nachricht
