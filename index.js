@@ -69,18 +69,11 @@ client.on("message", async msg => {
         console.log(`📩 Nachricht von ${msg._data.notifyName}: ${msg.body} (ID: ${msg.id._serialized})`);
 
         // Chat-Info an Backend senden
-        await fetch(`http://192.168.250.1:5678/webhook-test/wab/updatechat`, {
+        await fetch(`http://192.168.250.1:5678/test/wab/updatechat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: msg.id._serialized, name: msg._data.notifyName }),
         });
-
-        // Beispiel: wenn Nachricht mit "/echo " beginnt, dann echo
-        if (body && body.startsWith("/echo ")) {
-            const toEcho = msg.body.slice(6);
-            await client.sendMessage(from, toEcho || "(nothing to echo)");
-            return;
-        }
 
         // All regualr commands send to n8n backend
         if (body && body.startsWith("/")) {
@@ -93,11 +86,9 @@ client.on("message", async msg => {
                     part2 = parts.shift();
                     content = parts.join(' ') || undefined;
                 }
-                console.log(`part1: ${part1}, part2: ${part2}, content: ${content}`);
 
                 try {
                     // include '=' and encode parts
-                    console.log(`Checking permission for command: ${part1}-${part2}`);
                     const response = await fetch(`http://192.168.250.1:5678/webhook/wab/checkPermission`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
