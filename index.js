@@ -34,6 +34,7 @@ client.on("authenticated", () => console.log("🔐 Authentifiziert"));
 client.on("disconnected", () => console.log("❌ Verbindung verloren – wird neu aufgebaut…"));
 
 // Einfacher Auto-Reply / Command-Handler
+
 client.on("message", async msg => {
     try {
         const from = msg.from; // chat id
@@ -41,13 +42,6 @@ client.on("message", async msg => {
 
         console.log(`📩 Nachricht von ${msg._data.notifyName}: ${msg.body} (ID: ${msg.id._serialized})`);
 
-        // Nachricht als gelesen markieren
-        try {
-            const chat = await msg.getChat();
-            await chat.sendSeen();
-        } catch (err) {
-            console.error("sendSeen error:", err);
-        }
         // Chat-Info an Backend senden
         await fetch(`http://192.168.250.1:5678/webhook/wab/updatechat`, {
             method: "POST",
@@ -190,9 +184,33 @@ client.on("message_reaction", async (reaction) => {
         }
     }
 });
+client.on("chat_update", async (chat) => {
+    try {
+        if (chat?.ephemeralDuration && chat.ephemeralDuration !== 86400) {
+            await chat.setEphemeralDuration(86400);
+        }
+    } catch (err) {
+        console.error("Fehler bei chat_update:", err);
+    }
+});
+
+setInterval(async () => {
+    try {
+        await client.getState();
+    } catch {
+        client.initialize();
+    }
+    try {
+        const chats = await client.getChats();
+        for (const chat of chats) {
+            if (chat.unreadCount > 0) await chat.sendSeen();
+        }
+    } catch (err) {
+        console.error("Fehler beim Lesen von Chats:", err);
+    }
+}, 60000);
 
 client.initialize();
-
 // Endpoint zum Senden einer Nachricht
 app.post("/send", async (req, res) => {
     const sendType = req.query.type;
