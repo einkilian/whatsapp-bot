@@ -150,13 +150,6 @@ client.on("message", async msg => {
             }
         }
 
-        try {
-            const chat = await msg.getChat();
-            await enforceEphemeral24h(chat);
-        } catch (err) {
-            console.error("Fehler beim Erzwingen von 24h Ephemeral (message):", err);
-        }
-
     } catch (e) {
         console.error("Fehler im message handler:", e);
     }
